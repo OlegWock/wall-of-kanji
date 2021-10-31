@@ -1,0 +1,80 @@
+$small-screen: 600px;
+
+.App {
+  width: 100%;
+  height: 100%;
+
+  .show-panel-button {
+    position: absolute;
+    top: 36px;
+    right: 36px;
+  }
+
+  .panel {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 16px;
+    width: 400px;
+    border-radius: 20px;
+    background: #000000aa;
+    color: white;
+
+    @media screen and (max-width: $small-screen) {
+      width: 300px;
+    }
+
+    
+
+    .hide-panel-button {
+      position: absolute;
+      top: 0px;
+      right: 0px;
+    }
+    
+    .title-row {
+      display: flex;
+      justify-content: center;
+      position: relative;
+      margin-bottom: 16px;
+
+      .title {
+        font-size: 18px;
+      }
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .animation-row {
+      .value span {
+        display: flex;
+        align-items: center;
+
+        .warning-icon {
+          color: #FF8C00;
+          margin-left: 4px;
+          font-size: 16px;
+          cursor: pointer;
+        }
+      }
+    }
+
+    .action-button {
+      width: 48%;
+    }
+
+    .about-row {
+      flex-direction: column;
+      margin-bottom: 0;
+
+      a {
+        text-align: center;
+      }
+    }
+  }
+}

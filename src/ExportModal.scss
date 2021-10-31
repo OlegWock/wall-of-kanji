@@ -1,0 +1,28 @@
+.ExportModal {
+  .content {
+    display: flex;
+    flex-direction: column;
+
+    .alert {
+      margin-bottom: 12px;
+    }
+
+    .mode-select {
+      align-self: center;
+      margin-bottom: 32px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .column {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+  }
+}
