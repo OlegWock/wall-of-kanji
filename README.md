@@ -2,6 +2,8 @@
 
 Love Japan, China or Korea and always wanted to create your unique wallpaper or poster to reflect that love? Well, now you can!
 
+![Demonstration of app](demonstration.png)
+
 ## How?
 1. Visit [wall-of-kanji.netlify.app](https://wall-of-kanji.netlify.app/)
 1. Select which dataset you would like to use (this affects colors and set of used characters)
