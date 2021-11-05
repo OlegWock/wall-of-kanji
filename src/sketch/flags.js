@@ -153,8 +153,12 @@ const getKRBlackLinesPath = (width, height) => {
   return [path1, path2, path3, path4];
 }
 
-export const drawFlagBackground = (context, countryCode, width, height) => {
-  context.fillStyle = colors[countryCode].background.asHex();
+export const drawFlagBackground = (context, countryCode, width, height, fillWhite) => {
+  if (!fillWhite && [KR, JP].includes(countryCode)) {
+    context.fillStyle = '#00000000'; // Transperent;
+  } else {
+    context.fillStyle = colors[countryCode].background.asHex();
+  }
   context.fillRect(0, 0, width, height);
 }
 

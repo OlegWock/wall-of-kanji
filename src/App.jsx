@@ -32,13 +32,18 @@ function App() {
     }
   };
 
-  const exportPicture = async ({dimensions, pixelsPerInch, orientation, pixelRatio, file}) => {
+  const exportPicture = async ({dimensions, pixelsPerInch, bleed, units, fillWhite, orientation, pixelRatio, file}) => {
+    // TODO: consider adding option to export to TIFF. This might produce very large build, but will be more convenient for users since print offices often prefers this format
+    // https://github.com/motiz88/canvas-to-tiff
     const canvas = document.createElement('canvas');
+    console.log('Creating manager with dimensions set to', dimensions);
     const manager = await canvasSketch(sketch, {
       ...defaultSettings,
       animate: false,
       dimensions,
       pixelsPerInch,
+      units,
+      bleed,
       orientation,
       canvas: canvas,
       file,
@@ -49,7 +54,8 @@ function App() {
         fontSize,
         spacing,
         style,
-        dataset
+        dataset,
+        fillWhite
       },
       
     });
@@ -119,6 +125,7 @@ function App() {
     }
   }, []);
 
+  
   useEffect(() => {
     console.log('Redraw with settings:', {seed, font, animate, sketchManager});
     if (sketchManager.current) {
@@ -129,6 +136,7 @@ function App() {
       dimensions: [
         (width || 1024) * pixelRatio, 
         (height || 1024) * pixelRatio],
+      bleed: 0,
       canvas: canvas.current,
       data: {
         font,
@@ -137,7 +145,8 @@ function App() {
         fontSize,
         spacing,
         style,
-        dataset
+        dataset,
+        fillWhite: true,
       },
       animate,
     }).then(manager => {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Modal, Radio, Select, InputNumber, Tooltip, Typography } from 'antd';
+import { Alert, Modal, Radio, Select, Input, InputNumber, Tooltip, Typography, Switch } from 'antd';
 import { ConditionalRender } from './utils/ConditionalRender';
 
 import './ExportModal.scss';
@@ -50,50 +50,78 @@ const sizes = {
   'print': {
     'a4': {
       label: 'A4 (210mm x 297mm)', 
-      dimensions: 'a4'
+      dimensions: [210, 297],
+      units: 'mm',
     },
     'a3': {
       label: 'A3 (297mm x 420mm)', 
-      dimensions: 'a3'
+      dimensions: [297, 420],
+      units: 'mm',
     },
     'a2': {
       label: 'A2 (420mm x 594mm)', 
-      dimensions: 'a2'
+      dimensions: [420, 594],
+      units: 'mm',
     },
     'postcard': {
       label: 'Postcard (101.6mm x 152.4mm)', 
-      dimensions: 'postcard'
+      dimensions: [101.6, 152.4],
+      units: 'mm',
     },
     'poster-small': {
       label: 'Poster small (280mm x 430mm)', 
-      dimensions: 'poster-small'
+      dimensions: [280, 430],
+      units: 'mm',
     },
     'poster': {
       label: 'Poster (460mm x 610mm)', 
-      dimensions: 'poster'
+      dimensions: [460, 610],
+      units: 'mm',
     },
     'poster-large': {
       label: 'Poster large (610mm x 910mm)', 
-      dimensions: 'poster-large'
+      dimensions: [610, 910],
+      units: 'mm',
     },
     'letter': {
       label: 'Letter (8.5in x 11in)', 
-      dimensions: 'letter'
+      dimensions: [8.5, 11],
+      units: 'in',
     },
     'legal': {
       label: 'Legal (8.5in x 14in)', 
-      dimensions: 'legal'
+      dimensions: [8.5, 14],
+      units: 'in',
     },
     'ledger': {
       label: 'Ledger/Tabloid (11in x 17in)', 
-      dimensions: 'ledger'
+      dimensions: [11, 17],
+      units: 'in',
     }
   },
 }
 
 export const ExportModal = (props) => {
   const doExport = async () => {
-    const { dimensions } = sizes[mode][size];
+    let { dimensions, units } = sizes[mode][size];
+    console.log('Export dimensions:', dimensions);
+
+    let dimensionsPx, bleedPx;
+    // Convert dimensions to pixels
+    if (units === 'mm') {
+      const ppmm = ppi / 25.4;
+      dimensionsPx = [
+        Math.round(dimensions[0] * ppmm), 
+        Math.round(dimensions[1] * ppmm)
+      ];
+      bleedPx = Math.round(bleed * ppmm);
+    } else {
+      dimefinalDimensionsnsions = [
+        Math.round(dimensions[0] * ppi), 
+        Math.round(dimensions[1] * ppi)
+      ];
+      bleedPx = Math.round(bleed * ppi);
+    }
     
     let file = `wall-of-kanji-${mode}-${size}`;
     if (mode === 'print') {
@@ -103,8 +131,11 @@ export const ExportModal = (props) => {
     file += `-${Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 8)}`;
 
     await props.exportFn({
-      dimensions,
+      dimensions: dimensionsPx,
       pixelsPerInch: ppi,
+      units: 'px',
+      bleed: includeBleed ? bleedPx : 0,
+      fillWhite,
       orientation,
       pixelRatio: 1,
       file,
@@ -112,9 +143,19 @@ export const ExportModal = (props) => {
     props.onVisibilityChange(false);
   };
 
+  const setPaperSize = (presetName) => {
+    const size = sizes[mode][presetName];
+    setSize(presetName);
+    setBleedUnits(size.units);
+  };
+
   const [mode, setMode] = useState('digital');
   const [size, setSize] = useState('3840x2160');
   const [ppi, setPpi] = useState(300);
+  const [includeBleed, setIncludeBleed] = useState(false);
+  const [bleed, setBleed] = useState(0);
+  const [bleedUnits, setBleedUnits] = useState('mm');
+  const [fillWhite, setFillWhite] = useState(false);
   const [orientation, setOrientation] = useState('landscape');
 
   return <Modal
@@ -157,7 +198,7 @@ export const ExportModal = (props) => {
           <Select 
             style={{width: 250}}
             value={size}
-            onChange={setSize}
+            onChange={setPaperSize}
             getPopupContainer={props.getContainer}
             options={Object.keys(sizes[mode]).map(key => {
               return {label: sizes[mode][key].label, value: key};
@@ -172,6 +213,39 @@ export const ExportModal = (props) => {
             <Tooltip title="300 PPI is considered industry standart and is well supported by all modern printers. 
             If you would like extra crisp image, set PPI to 400 or more, but remember to consult 
             with print service where you're going to print this." getPopupContainer={props.getContainer}>
+              <Typography.Link>Not sure?</Typography.Link>
+            </Tooltip>
+          </div>
+        </div>
+        <div className="row">
+          <div>Bleed</div>
+          <div className="column">
+            <Switch onChange={val => setIncludeBleed(val)} checked={includeBleed} />
+            <ConditionalRender condition={includeBleed}>
+
+                <Input
+                  type="number"
+                  className="bleed-input" 
+                  min={0} max={500} 
+                  onChange={e => setBleed(parseInt(e.target.value))} 
+                  value={bleed} 
+                  addonAfter={bleedUnits}
+                />
+      
+            </ConditionalRender>
+            <Tooltip title="Some print shops will ask you to include 'offset' for each side of image. This is 
+            especially actual for images with filling edge to edge. To set correct bleeding (and avoid disaster later) 
+            visit print shop site or ask them in person, different print shops might have different requirements" getPopupContainer={props.getContainer}>
+              <Typography.Link>Not sure?</Typography.Link>
+            </Tooltip>
+          </div>
+        </div>
+        <div className="row">
+          <div>Fill white background</div>
+          <div className="column">
+            <Switch checked={fillWhite} onChange={val => setFillWhite(val)}/>
+            <Tooltip title="If enabled, we won't fill white background of image (e.g. background of Japanese flag) 
+            and leave it transperent." getPopupContainer={props.getContainer}>
               <Typography.Link>Not sure?</Typography.Link>
             </Tooltip>
           </div>

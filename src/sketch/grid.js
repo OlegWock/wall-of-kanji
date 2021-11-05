@@ -34,7 +34,6 @@ export const drawKanji2dGrid = ({map, context, width, height, textColorTo, textC
       let noiseValueConverted;
       if (dataset === JP) noiseValueConverted = mapRange(noiseValue, 0, 1, 0.05, 0.95);
       else noiseValueConverted = mapRange(noiseValue, 0, 1, 0.15, 0.95);
-      const opacity = Math.floor(noiseValueConverted * 255);
 
       const textColor = textColorFrom.calculatePointAtGradient(textColorTo, noiseValueConverted).asHex();
       context.fillStyle = textColor;

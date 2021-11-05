@@ -75,9 +75,10 @@ const generateKanjii2dMap = (dataset, width, height, rnd, fontRnd, font) => {
 export const sketch = ({ canvas, context, data, settings }) => {
   const { width, height } = canvas;
   console.log('Canvas size:', width, height);
+  console.log('Settings:', settings);
   console.log('Data:', data);
-
-  const { pixelRatio, font, fontSize, seed, spacing, style, dataset } = data;
+  const { bleed } = settings;
+  const { pixelRatio, font, fontSize, seed, spacing, style, dataset, fillWhite } = data;
 
   // We need different random generators so they work a bit more independent (e.g. changing font to 'mix' won't change kanjis on map)
   const drawMapRnd = random.createRandom(seed);
@@ -85,8 +86,8 @@ export const sketch = ({ canvas, context, data, settings }) => {
   const fontRnd = random.createRandom(seed);
   const krAccentColorRnd = random.createRandom(seed);
 
-  const activeWidth = (width - (margin * 2 * pixelRatio));
-  const activeHeight = (height - (margin * 2 * pixelRatio));
+  const activeWidth = Math.round((width - bleed * 2) - (margin * 2 * pixelRatio));
+  const activeHeight = Math.round((height - bleed * 2) - (margin * 2 * pixelRatio));
 
   context.font = `${fontSize * pixelRatio}px sans-serif`;
   const { width: kanjiWidth, emHeightAscent, emHeightDescent } = context.measureText('本');
@@ -105,60 +106,73 @@ export const sketch = ({ canvas, context, data, settings }) => {
     accentColor = colors[dataset].accent;
   }
 
-  return ({ context, width, height, playhead, time }) => {
+  return ({ context, width, height, playhead, time, trimWidth, trimHeight, bleed }) => {
     const drawMap = (textColorFrom, textColorTo) => drawKanji2dGrid({
       map,
       context,
       time,
       playhead,
       margin,
-      width,
-      height,
+      width: trimWidth,
+      height: trimHeight,
       textColorFrom,
       textColorTo,
       settings,
       noiseRnd: drawMapRnd,
     });
 
+    const translateForBleed = () => {
+      context.translate(bleed, bleed);
+    }
+
+    const transalateBack = () => {
+      context.translate(-bleed, -bleed);
+    };
+
     if (style === STYLE_FLAG_COLORS) {
       if (dataset === JP) {
         context.fillStyle = colors[dataset].accent.asHex();
         context.fillRect(0, 0, width, height);
+        translateForBleed();
         drawMap(colors[dataset].background, colors[dataset].accent);
+        transalateBack();
       } else if (dataset === CN) {
         context.fillStyle = colors[dataset].background.asHex();
         context.fillRect(0, 0, width, height);
+        translateForBleed();
         drawMap(colors[dataset].accent, colors[dataset].background);
+        transalateBack();
       } else {
         context.fillStyle = accentColor.asHex();
         context.fillRect(0, 0, width, height);
+        translateForBleed();
         drawMap(colors[dataset].background, accentColor);
+        transalateBack();
       }
     } else {
-      drawFlagBackground(context, dataset, width, height);
+      drawFlagBackground(context, dataset, width, height, fillWhite);
+      translateForBleed();
       drawMap(accentColor, colors[dataset].background);
-      drawFlagAccents(context, dataset, width, height);
+      drawFlagAccents(context, dataset, trimWidth, trimHeight);
       if (dataset === KR) {
         const rotate90 = () => {
-          context.translate(width/2, height/2);
+          context.translate(trimWidth/2, trimHeight/2);
           context.rotate(toRads(90));
-          context.translate(-height/2, -width/2);
+          context.translate(-trimHeight/2, -trimWidth/2);
         };
 
         const rotateBack = () => {
-          context.translate(height/2, width/2);
+          context.translate(trimHeight/2, trimWidth/2);
           context.rotate(toRads(-90));
-          context.translate(-width/2, -height/2);
+          context.translate(-trimWidth/2, -trimHeight/2);
         };
 
-        const vertical = height > width;
-        const useHeight = vertical ? width : height;
-        const useWidth = vertical ? height : width;
+        const vertical = trimHeight > trimWidth;
+        const useHeight = vertical ? trimWidth : trimHeight;
+        const useWidth = vertical ? trimHeight : trimWidth;
         const {redCircles, blueCircles, blackLines} = getFlagAccentsPath(dataset, useWidth, useHeight);
         const circlePaths = [...redCircles, ...blueCircles];
         const white = Color.fromHex('#FFFFFF');
-        
-
         
         circlePaths.forEach(path => {
           context.save();
@@ -176,22 +190,23 @@ export const sketch = ({ canvas, context, data, settings }) => {
         ]
         for (let i = 0; i < 4; i++) {
           context.save();
-          context.translate(width/2, height/2);
+          context.translate(trimWidth/2, trimHeight/2);
           context.rotate(angles[i]);
-          context.translate(-width/2, -height/2);
+          context.translate(-trimWidth/2, -trimHeight/2);
           if (vertical) rotate90();
           context.clip(blackLines[i]);
           if (vertical) rotateBack();
-          context.translate(width/2, height/2);
+          context.translate(trimWidth/2, trimHeight/2);
           context.rotate((Math.PI * 2) - angles[i]);
-          context.translate(-width/2, -height/2);
+          context.translate(-trimWidth/2, -trimHeight/2);
           drawMap(white, white);
           context.restore();
         }
       } else {
-        context.clip(getFlagAccentsPath(dataset, width, height));
+        context.clip(getFlagAccentsPath(dataset, trimWidth, trimHeight));
         drawMap(colors[dataset].background, accentColor);
       }
+      transalateBack();
     }
   };
 }
