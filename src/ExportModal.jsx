@@ -48,6 +48,16 @@ const sizes = {
     },
   },
   'print': {
+    'a6': {
+      label: 'A6 (105mm x 148mm)',
+      dimensions: [105, 148],
+      units: 'mm',
+    },
+    'a5': {
+      label: 'A5 (148mm x 210mm)',
+      dimensions: [148, 210],
+      units: 'mm',
+    },
     'a4': {
       label: 'A4 (210mm x 297mm)', 
       dimensions: [210, 297],
